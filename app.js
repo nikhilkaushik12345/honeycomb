@@ -74,7 +74,7 @@ app.post("/exchange", async (req, res) => {
   }
 });
 
-// Board lookup across all environment slugs
+// Board lookup across all environment slugs (fixed)
 app.post("/boards", async (req, res) => {
   try {
     const { boardId } = req.body;
@@ -95,7 +95,7 @@ app.post("/boards", async (req, res) => {
           params: {
             name: "list_boards",
             arguments: {
-              environment_slug: slug,
+              environment_slug: slug,  // now a single string
               board_id: boardId
             }
           }
@@ -107,7 +107,6 @@ app.post("/boards", async (req, res) => {
       if (!dataLine) continue;
 
       const parsed = JSON.parse(dataLine.replace("data: ", ""));
-      // Only include if there is meaningful content
       if (parsed.result && parsed.result.content && parsed.result.content.length > 0) {
         results.push({
           environment_slug: slug,
