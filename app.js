@@ -43,6 +43,7 @@ app.post("/exchange", async (req, res) => {
     const token = await tokenRes.json();
     ACCESS_TOKEN = token.access_token;
 
+    // Get environment slugs silently (for internal use)
     const mcpRes = await fetch("https://mcp.honeycomb.io/mcp", {
       method: "POST",
       headers: {
@@ -68,13 +69,14 @@ app.post("/exchange", async (req, res) => {
 
     ENV_SLUGS = [...contentText.matchAll(/Slug:\s(.+)/g)].map(m => m[1]);
 
-    res.json({ access_token: ACCESS_TOKEN, environment_slugs: ENV_SLUGS });
+    // Only return access_token to front-end
+    res.json({ access_token: ACCESS_TOKEN });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Board lookup across all environment slugs (fixed)
+// Board lookup across all environment slugs (clean JSON output)
 app.post("/boards", async (req, res) => {
   try {
     const { boardId } = req.body;
@@ -95,7 +97,7 @@ app.post("/boards", async (req, res) => {
           params: {
             name: "list_boards",
             arguments: {
-              environment_slug: slug,  // now a single string
+              environment_slug: slug,
               board_id: boardId
             }
           }
@@ -108,10 +110,21 @@ app.post("/boards", async (req, res) => {
 
       const parsed = JSON.parse(dataLine.replace("data: ", ""));
       if (parsed.result && parsed.result.content && parsed.result.content.length > 0) {
-        results.push({
-          environment_slug: slug,
-          data: parsed.result.content
-        });
+        // Parse metadata from text if available
+        const boardMetadataText = parsed.result.content[0].text;
+        if (boardMetadataText.includes("board_name")) {
+          const metadataLines = boardMetadataText.split("\n").filter(line => line.includes(": "));
+          const metadataObj = {};
+          metadataLines.forEach(line => {
+            const [key, ...rest] = line.split(": ");
+            metadataObj[key.trim()] = rest.join(": ").trim();
+          });
+
+          results.push({
+            environment_slug: slug,
+            board: metadataObj
+          });
+        }
       }
     }
 
