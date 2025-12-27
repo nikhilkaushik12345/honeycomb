@@ -26,21 +26,23 @@ app.post("/exchange", async (req, res) => {
     const params = new URLSearchParams();
     params.append("grant_type", "authorization_code");
     params.append("code", code);
-    params.append("redirect_uri", "https://mux-9qx2.onrender.com/callback");
-    params.append("client_id", "hcaoc_01kdgh277ht09adh9wwmks60zg");
-    params.append("client_secret", "s5kykg7h9b7mwfa6nw0bnhnkn4wf77h2");
+    params.append("redirect_uri", "https://honeycomb-7ay6.onrender.com/callback");
+    params.append("client_id", "hcaoc_01kdgkggz78csrvx0e5cyd4e6x");
+    params.append("client_secret", "ad6mgrgh4tz6h3jjh2sjhxq1jgsxnqcm");
     params.append("code_verifier", "2sISEZC7sdWBNVNdZWUYmN1V-iV5XuhpjZW_36jSplA");
 
     const tokenRes = await fetch("https://ui.honeycomb.io/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+      },
       body: params.toString()
     });
 
     const token = await tokenRes.json();
     ACCESS_TOKEN = token.access_token;
 
-    // Fetch workspace context
     const mcpRes = await fetch("https://mcp.honeycomb.io/mcp", {
       method: "POST",
       headers: {
