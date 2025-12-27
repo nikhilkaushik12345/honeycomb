@@ -74,34 +74,49 @@ app.post("/exchange", async (req, res) => {
   }
 });
 
-// Board lookup
+// Board lookup across all environment slugs
 app.post("/boards", async (req, res) => {
   try {
     const { boardId } = req.body;
+    const results = [];
 
-    const mcpRes = await fetch("https://mcp.honeycomb.io/mcp", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream"
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 4,
-        method: "tools/call",
-        params: {
-          name: "list_boards",
-          arguments: {
-            environment_slug: ENV_SLUGS,
-            board_id: boardId
+    for (const slug of ENV_SLUGS) {
+      const mcpRes = await fetch("https://mcp.honeycomb.io/mcp", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+          "Accept": "application/json, text/event-stream"
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 4,
+          method: "tools/call",
+          params: {
+            name: "list_boards",
+            arguments: {
+              environment_slug: slug,
+              board_id: boardId
+            }
           }
-        }
-      })
-    });
+        })
+      });
 
-    const text = await mcpRes.text();
-    res.json({ response: text });
+      const text = await mcpRes.text();
+      const dataLine = text.split("\n").find(l => l.startsWith("data: "));
+      if (!dataLine) continue;
+
+      const parsed = JSON.parse(dataLine.replace("data: ", ""));
+      // Only include if there is meaningful content
+      if (parsed.result && parsed.result.content && parsed.result.content.length > 0) {
+        results.push({
+          environment_slug: slug,
+          data: parsed.result.content
+        });
+      }
+    }
+
+    res.json({ results });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
