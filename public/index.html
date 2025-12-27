@@ -13,11 +13,11 @@ function getAuthorizationCodeFromUrl() {
 function loginWithHoneycomb() {
   const authUrl =
     "https://ui.honeycomb.io/oauth/authorize" +
-    "?client_id=hcaoc_01kdgh277ht09adh9wwmks60zg" +
+    "?client_id=hcaoc_01kdgkggz78csrvx0e5cyd4e6x" +
     "&response_type=code" +
     "&code_challenge=MKfcOrCYrRrQ_5hvZe18M3vyeUqzixrdsy5fMnJzaS8" +
     "&code_challenge_method=S256" +
-    "&redirect_uri=" + encodeURIComponent("https://mux-9qx2.onrender.com/callback");
+    "&redirect_uri=" + encodeURIComponent("https://honeycomb-7ay6.onrender.com/callback");
 
   window.location.href = authUrl;
 }
